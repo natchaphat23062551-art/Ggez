@@ -1,0 +1,44 @@
+-- ==========================================
+-- SETTINGS (ตั้งค่า)
+-- ==========================================
+local Settings = {
+    Enabled = true,        -- true = เปิดใช้งาน / false = ปิดใช้งาน
+    Delay = 0.05,          -- ระยะเวลาหน่วง (วินาที) | 0 = เร็วที่สุด, 0.05-0.1 = ปลอดภัย
+    Argument = "SSS-6ABA86BF-E2"
+}
+
+-- ==========================================
+-- MAIN SCRIPT
+-- ==========================================
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local trainRemote = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Train"):WaitForChild("TrainOnceRE")
+
+-- ใช้ตัวแปร Global เพื่ออ้างอิงสถานะสวิตช์
+_G.AutoTrainSettings = Settings
+
+-- ยกเลิกลูปเก่าก่อนหน้า (ถ้ามีรันอยู่) เพื่อไม่ให้สคริปต์ซ้ำซ้อน
+if _G.AutoTrainLoop then
+    _G.AutoTrainLoop = false
+    task.wait(0.1)
+end
+
+_G.AutoTrainLoop = true
+
+task.spawn(function()
+    print("[AutoTrain] เริ่มการทำงาน...")
+    while _G.AutoTrainLoop do
+        if _G.AutoTrainSettings.Enabled then
+            trainRemote:FireServer(_G.AutoTrainSettings.Argument)
+            
+            -- ปรับการหน่วงเวลาตามค่า Delay
+            if _G.AutoTrainSettings.Delay > 0 then
+                task.wait(_G.AutoTrainSettings.Delay)
+            else
+                task.wait() -- ป้องกันเกมค้าง (RenderStepped/NextFrame)
+            end
+        else
+            task.wait(0.5) -- หากปิดสวิตช์ ให้รอเพื่อประหยัด CPU
+        end
+    end
+    print("[AutoTrain] หยุดการทำงานแล้ว")
+end)
